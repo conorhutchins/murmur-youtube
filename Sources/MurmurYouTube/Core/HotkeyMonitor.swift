@@ -2,21 +2,25 @@ import AppKit
 import Carbon.HIToolbox
 import Foundation
 
-/// Which modifier key holds the mic open.
+/// Which key holds the mic open.
 enum PushToTalkKey: String, CaseIterable, Sendable {
     case rightOption
     case fn
     case rightCommand
+    /// The § key top-left of ISO (UK/European) keyboards. Not a modifier, so it arrives as
+    /// keyDown/keyUp rather than flagsChanged, and ANSI (US) keyboards don't have it.
+    case section
 
     var keyCode: Int64 {
         switch self {
         case .rightOption: Int64(kVK_RightOption)   // 61
         case .fn: Int64(kVK_Function)               // 63
         case .rightCommand: Int64(kVK_RightCommand) // 54
+        case .section: Int64(kVK_ISO_Section)       // 10
         }
     }
 
-    /// Device-*dependent* bit for this specific physical key.
+    /// Device-*dependent* bit for this specific modifier key, or nil for a regular key.
     ///
     /// `CGEventFlags.maskAlternate` is the union mask — it's set whenever *either* Option
     /// key is down. Using it means: hold Left ⌥, tap Right ⌥, and the release is invisible
@@ -25,11 +29,12 @@ enum PushToTalkKey: String, CaseIterable, Sendable {
     ///
     /// These raw values are the NX_DEVICE* masks from IOKit's event system; they carry the
     /// left/right distinction that the public `CGEventFlags` constants discard.
-    var flag: CGEventFlags {
+    var flag: CGEventFlags? {
         switch self {
         case .rightOption: CGEventFlags(rawValue: 0x40)   // NX_DEVICERALTKEYMASK
         case .rightCommand: CGEventFlags(rawValue: 0x10)  // NX_DEVICERCMDKEYMASK
         case .fn: .maskSecondaryFn                        // no left/right variant exists
+        case .section: nil                                // a regular key has no modifier bit
         }
     }
 
@@ -38,6 +43,7 @@ enum PushToTalkKey: String, CaseIterable, Sendable {
         case .rightOption: "Right ⌥"
         case .fn: "fn"
         case .rightCommand: "Right ⌘"
+        case .section: "§"
         }
     }
 
@@ -46,7 +52,7 @@ enum PushToTalkKey: String, CaseIterable, Sendable {
     var shouldConsumeEvent: Bool { self != .fn }
 }
 
-/// Watches for a held modifier key using a `CGEventTap`.
+/// Watches for a held key using a `CGEventTap`.
 ///
 /// A tap is required rather than `NSEvent.addGlobalMonitor` because `fn` and left/right
 /// modifier discrimination don't surface through the higher-level APIs. This needs
@@ -66,7 +72,11 @@ final class HotkeyMonitor {
     func start() -> Bool {
         stop()
 
+        // Modifiers report through flagsChanged; a regular key through keyDown/keyUp.
+        // Listening for all three means switching key never needs the tap rebuilt.
         let mask = (1 << CGEventType.flagsChanged.rawValue)
+            | (1 << CGEventType.keyDown.rawValue)
+            | (1 << CGEventType.keyUp.rawValue)
         let refcon = Unmanaged.passUnretained(self).toOpaque()
 
         guard let tap = CGEvent.tapCreate(
@@ -126,10 +136,19 @@ final class HotkeyMonitor {
             return false
         }
 
-        guard type == .flagsChanged, keyCode == key.keyCode else { return false }
+        guard keyCode == key.keyCode else { return false }
 
-        let nowPressed = flags.contains(key.flag)
-        guard nowPressed != isPressed else { return false }
+        let nowPressed: Bool
+        switch (type, key.flag) {
+        case (.flagsChanged, let flag?): nowPressed = flags.contains(flag)
+        case (.keyDown, nil): nowPressed = true
+        case (.keyUp, nil): nowPressed = false
+        default: return false
+        }
+
+        // A regular key autorepeats keyDown while held: no state change, but it still
+        // mustn't leak into the focused app as typed characters.
+        guard nowPressed != isPressed else { return type == .keyDown && key.shouldConsumeEvent }
         isPressed = nowPressed
 
         if nowPressed { onPress?() } else { onRelease?() }

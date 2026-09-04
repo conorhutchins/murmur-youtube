@@ -18,7 +18,7 @@ is not automatic on macOS and is worth understanding before changing anything:
   other app, and vice versa.
 - **Executable `MurmurYouTube`** — distinct enough that `pkill -x MurmurYouTube` cannot
   match a differently-named binary. The `Makefile` only ever targets `$(EXEC)`.
-- **Hotkey is configurable** (Right ⌥ / fn / Right ⌘) precisely because another tool may
+- **Hotkey is configurable** (Right ⌥ / fn / Right ⌘ / §) precisely because another tool may
   already own the key you'd reach for first. The event tap inspects only its own keycode
   and passes everything else through untouched.
 
@@ -120,7 +120,7 @@ Sources/MurmurYouTube/
 ├── MurmurYouTubeApp.swift              @main, AppDelegate, MenuBarExtra
 ├── Core/
 │   ├── DictationController.swift   state machine, wires everything
-│   ├── HotkeyMonitor.swift         CGEventTap on .flagsChanged
+│   ├── HotkeyMonitor.swift         CGEventTap on .flagsChanged + keyDown/keyUp
 │   ├── AudioCapture.swift          AVAudioEngine tap + format conversion + RMS
 │   └── TextInjector.swift          AX insert, pasteboard+⌘V fallback
 ├── Transcription/
