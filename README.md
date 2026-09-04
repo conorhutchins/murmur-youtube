@@ -30,6 +30,7 @@ the same key both record, and whichever injects text will fight the other.
 ## Quick start
 
 ```bash
+make cert        # once per machine: a self-signed certificate so rebuilds keep their permissions
 make install     # builds, bundles, signs, copies to /Applications, launches
 ```
 
@@ -49,9 +50,10 @@ changes on every build, so the rebuilt binary stops satisfying the stored requir
 and the symptom is nasty: the Accessibility toggle still **shows as on** while the app is
 reported untrusted, and flipping it changes nothing because the stale row is the problem.
 
-The `Makefile` therefore signs with a stable Developer ID (auto-detected via
-`security find-identity`, falling back to ad-hoc). Verified: rebuild + reinstall keeps both
-grants with no re-prompt.
+The `Makefile` therefore signs with a stable identity: a Developer ID if the machine has
+one, otherwise the self-signed certificate that `make cert` creates once per machine, and
+ad-hoc only when there is neither. Verified with both: rebuild + reinstall keeps both grants
+with no re-prompt.
 
 If a grant ever does get wedged, reset that one row and re-add — never toggle:
 
@@ -174,8 +176,8 @@ change.
    real palette, HUD motion design, onboarding.
 5. **Onboarding.** A first-run window that walks through both permissions instead of
    relying on the menu's "Grant…" items.
-6. **Developer ID signing + notarization.** Ends the TCC-reset churn and makes the app
-   distributable.
+6. **Developer ID signing + notarization.** Makes the app distributable. `make cert` already
+   ends the TCC-reset churn for local builds.
 
 ---
 
