@@ -106,8 +106,9 @@ hairline bevels and procedurally-drawn brushed grain.
 **Code signing is load-bearing, not cosmetic.** TCC stores a code-signing *requirement* per
 entry, not just a path. An ad-hoc signature changes every build, so the rebuilt binary stops
 satisfying the stored requirement — and the symptom lies: the Accessibility toggle still
-shows as **on** while the app is untrusted. The `Makefile` auto-detects a Developer ID via
-`security find-identity`. Don't replace that with `--sign -`.
+shows as **on** while the app is untrusted. The `Makefile` auto-detects a Developer ID, or
+the self-signed certificate from `make cert`, via `security find-identity`. Don't replace
+that with `--sign -`.
 
 If a grant does get wedged, reset that one row — never toggle, and never omit the bundle ID:
 

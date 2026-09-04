@@ -24,15 +24,21 @@ CONTENTS := $(BUNDLE)/Contents
 
 ## TCC keys the Accessibility grant to the code signature, so an ad-hoc signature — which
 ## changes on every build — makes the user re-grant after every `make`. Signing with a
-## stable Developer ID keeps the identity constant and the grant sticky. Falls back to
-## ad-hoc ("-") on a machine without the cert.
+## stable identity keeps the grant sticky: a Developer ID if there is one, otherwise the
+## self-signed certificate from `make cert` (sort puts "Developer" ahead of "Murmur").
+## Falls back to ad-hoc ("-") on a machine with neither.
 SIGN_ID := $(shell security find-identity -v -p codesigning 2>/dev/null \
-             | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.*)".*/\1/')
+             | grep -o -E '"(Developer ID Application[^"]*|Murmur Local Signing)"' \
+             | sort | head -1 | tr -d '"')
 ifeq ($(strip $(SIGN_ID)),)
 SIGN_ID := -
 endif
 
-.PHONY: all build app run install clean icon
+.PHONY: all build app run install clean icon cert
+
+## One-time, per machine. See Tools/make-signing-cert.sh for what it does and why.
+cert:
+	@Tools/make-signing-cert.sh
 
 all: app
 
