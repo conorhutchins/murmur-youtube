@@ -120,7 +120,7 @@ Sources/MurmurYouTube/
 ├── MurmurYouTubeApp.swift              @main, AppDelegate, MenuBarExtra
 ├── Core/
 │   ├── DictationController.swift   state machine, wires everything
-│   ├── HotkeyMonitor.swift         CGEventTap on .flagsChanged
+│   ├── HotkeyMonitor.swift         CGEventTap on .flagsChanged + keyDown/keyUp
 │   ├── AudioCapture.swift          AVAudioEngine tap + format conversion + RMS
 │   └── TextInjector.swift          AX insert, pasteboard+⌘V fallback
 ├── Transcription/
