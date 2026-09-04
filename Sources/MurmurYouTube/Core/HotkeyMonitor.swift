@@ -7,12 +7,16 @@ enum PushToTalkKey: String, CaseIterable, Sendable {
     case rightOption
     case fn
     case rightCommand
+    /// The § key top-left of ISO (UK/European) keyboards. Not a modifier, so it arrives as
+    /// keyDown/keyUp rather than flagsChanged, and ANSI (US) keyboards don't have it.
+    case section
 
     var keyCode: Int64 {
         switch self {
         case .rightOption: Int64(kVK_RightOption)   // 61
         case .fn: Int64(kVK_Function)               // 63
         case .rightCommand: Int64(kVK_RightCommand) // 54
+        case .section: Int64(kVK_ISO_Section)       // 10
         }
     }
 
@@ -30,6 +34,7 @@ enum PushToTalkKey: String, CaseIterable, Sendable {
         case .rightOption: CGEventFlags(rawValue: 0x40)   // NX_DEVICERALTKEYMASK
         case .rightCommand: CGEventFlags(rawValue: 0x10)  // NX_DEVICERCMDKEYMASK
         case .fn: .maskSecondaryFn                        // no left/right variant exists
+        case .section: nil                                // a regular key has no modifier bit
         }
     }
 
@@ -38,6 +43,7 @@ enum PushToTalkKey: String, CaseIterable, Sendable {
         case .rightOption: "Right ⌥"
         case .fn: "fn"
         case .rightCommand: "Right ⌘"
+        case .section: "§"
         }
     }
 
