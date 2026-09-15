@@ -41,7 +41,7 @@ Then grant two permissions — neither is optional, and neither can be requested
 | **Accessibility** | System Settings ▸ Privacy & Security ▸ Accessibility | The `CGEventTap` that sees the hotkey, and the AX text insert |
 | **Microphone** | Prompted on first dictation | Audio capture |
 
-Restart Murmur YouTube after granting Accessibility. Then hold **Right ⌥** and talk.
+Restart Murmur YouTube after granting Accessibility. Then hold **§** and talk.
 
 ### Why grants survive rebuilds here
 
